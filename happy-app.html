@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy - Social Video App</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ff006e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Happy">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+            color: white;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            margin: 0 auto;
+            position: relative;
+            background: #000;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff006e, #fb5607, #ffbe0b, #8338ec);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 18px;
+            margin-bottom: 40px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .login-form {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 300px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 16px;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Main App */
+        .main-app {
+            display: none;
+            height: 100vh;
+        }
+
+        .video-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .mock-video {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            position: relative;
+        }
+
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-button:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            padding: 50px 20px 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .nav-tab {
+            color: rgba(255,255,255,0.7);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: #ff006e;
+            border-radius: 2px;
+        }
+
+        .side-actions {
+            position: absolute;
+            right: 15px;
+            bottom: 120px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .action-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .action-btn.liked {
+            background: rgba(255,0,110,0.3);
+            color: #ff006e;
+        }
+
+        .action-count {
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .bottom-info {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            padding: 20px;
+            background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .username {
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .follow-btn {
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.3s ease;
+        }
+
+        .follow-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255,0,110,0.4);
+        }
+
+        .follow-btn.following {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .video-description {
+            color: white;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .hashtags {
+            color: #ff006e;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .nav-item.active {
+            color: #ff006e;
+            transform: scale(1.1);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .record-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255,0,110,0.4);
+            animation: recordPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes recordPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Comments Modal */
+        .comments-modal {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            height: 70%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px 20px 0 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .comments-modal.show {
+            bottom: 0;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .comments-list {
+            height: calc(100% - 120px);
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .comment {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-user {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
+        }
+
+        .comment-input {
+            display: flex;
+            gap: 10px;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+        }
+
+        .comment-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .comment-input input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Upload Modal */
+        .upload-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .upload-content {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .upload-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .floating-hearts {
+            position: absolute;
+            right: 20px;
+            bottom: 200px;
+            z-index: 5;
+        }
+
+        .heart {
+            position: absolute;
+            color: #ff006e;
+            font-size: 20px;
+            animation: floatUp 3s ease-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) rotate(360deg);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            z-index: 1002;
+            display: none;
+        }
+
+        .profile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1001;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .profile-content {
+            max-width: 350px;
+            margin: 0 auto;
+            padding-top: 60px;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff006e, #fb5607);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            margin: 0 auto 20px;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff006e;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div class="login-screen" id="loginScreen">
+            <div class="logo">Happy</div>
+            <div class="tagline">Spread Joy • Share Moments • Build Community</div>
+            
+            <div class="login-form">
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button class="btn btn-primary" onclick="login()">Sign Up / Login</button>
+                <button class="btn btn-secondary" onclick="guestLogin()">Continue as Guest</button>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div class="main-app" id="mainApp">
+            <!-- Top Navigation -->
+            <div class="top-bar">
+                <div class="nav-tabs">
+                    <div class="nav-tab" onclick="switchFeed('following')">Following</div>
+                    <div class="nav-tab active" onclick="switchFeed('foryou')">For You</div>
+                    <div class="nav-tab" onclick="switchFeed('live')">Live</div>
+                </div>
+            </div>
+
+            <!-- Video Container -->
+            <div class="video-container">
+                <div class="mock-video" id="currentVideo">
+                    <div class="play-button" onclick="togglePlay()">▶️</div>
+                    <span id="videoTitle">🎥 Happy Moment #1</span>
+                </div>
+            </div>
+
+            <!-- Side Actions -->
+            <div class="side-actions">
+                <div class="action-btn" id="likeBtn" onclick="likeVideo()">
+                    <span id="likeIcon">❤️</span>
+                    <div class="action-count" id="likeCount">12.5K</div>
+                </div>
+                <div class="action-btn" onclick="openComments()">
+                    <span>💬</span>
+                    <div class="action-count" id="commentCount">1.2K</div>
+                </div>
+                <div class="action-btn" onclick="shareVideo()">
+                    <span>📤</span>
+                    <div class="action-count">892</div>
+                </div>
+                <div class="action-btn" onclick="saveVideo()">
+                    <span id="saveIcon">🔖</span>
+                    <div class="action-count">Save</div>
+                </div>
+            </div>
+
+            <!-- Floating Hearts -->
+            <div class="floating-hearts" id="heartsContainer"></div>
+
+            <!-- Bottom Info -->
+            <div class="bottom-info">
+                <div class="user-info">
+                    <div class="avatar" id="userAvatar">H</div>
+                    <div class="username" id="videoUsername">@happyvibes</div>
+                    <button class="follow-btn" id="followBtn" onclick="followUser()">Follow</button>
+                </div>
+                <div class="video-description" id="videoDescription">
+                    Spreading joy and positivity! ✨ What makes you happy today? Share your happiness with the world! 🌟
+                </div>
+                <div class="hashtags" id="videoHashtags">
+                    #happy #positivity #joy #goodvibes #smile #happiness #mood #inspire
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="switchPage('home')">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </div>
+                <div class="nav-item" onclick="switchPage('discover')">
+                    <div class="nav-icon">🔍</div>
+                    <div class="nav-label">Discover</div>
+                </div>
+                <div class="record-btn" onclick="openUpload()">
+                    <span>📹</span>
+                </div>
+                <div class="nav-item" onclick="switchPage('inbox')">
+                    <div class="nav-icon">📥</div>
+                    <div class="nav-label">Inbox</div>
+                </div>
+                <div class="nav-item" onclick="openProfile()">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Modal -->
+        <div class="comments-modal" id="commentsModal">
+            <div class="modal-header">
+                <h3>Comments</h3>
+                <button class="close-btn" onclick="closeComments()">&times;</button>
+            </div>
+            <div class="comments-list" id="commentsList">
+                <!-- Comments will be populated here -->
+            </div>
+            <div class="comment-input">
+                <input type="text" id="commentText" placeholder="Add a comment...">
+                <button class="send-btn" onclick="addComment()">➤</button>
+            </div>
+        </div>
+
+        <!-- Upload Modal -->
+        <div class="upload-modal" id="uploadModal">
+            <div class="upload-content">
+                <div class="upload-icon">📹</div>
+                <h3>Create New Video</h3>
+                <p>Share your happy moments with the world!</p>
+                <input type="file" id="videoFile" class="file-input" accept="video/*">
+                <button class="upload-btn" onclick="selectVideo()">Choose Video</button>
+                <input type="text" id="videoTitleInput" placeholder="Video title..." style="width: 100%; padding: 10px; margin: 10px 0; border: none; border-radius: 5px; background: rgba(255,255,255,0.1); color: white;">
+                <textarea id="videoDescInput" placeholder="Description..." style="width: 100%; padding: 10px; margin: 10px 0; border: none; border-radius: 5px; background: rgba(255,255,255,0.1); color: white; height: 80px; resize: none;"></textarea>
+                <button class="upload-btn" onclick="uploadVideo()">Upload Video</button>
+                <button class="btn btn-secondary" onclick="closeUpload()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div class="profile-modal" id="profileModal">
+            <div class="profile-content">
+                <button class="close-btn" onclick="closeProfile()" style="position: absolute; top: 20px; right: 20px;">&times;</button>
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">U</div>
+                    <h2 id="profileUsername">@user</h2>
+                    <p id="profileBio">Living my best life! 🌟</p>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-number" id="followingCount">0</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="followersCount">0</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="likesCount">0</div>
+                        <div class="stat-label">Likes</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="editProfile()">Edit Profile</button>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div class="notification" id="notification"></div>
+    </div>
+
+    <script>
+        // App State
+        let currentUser = null;
+        let currentVideoIndex = 0;
+        let isPlaying = false;
+        let heartInterval = null;
+        
+        // Mock Database
+        const users = new Map();
+        const videos = [
+            {
+                id: 1,
+                user: 'happyvibes',
+                title: '🎥 Happy Moment #1',
+                description: 'Spreading joy and positivity! ✨ What makes you happy today? Share your happiness with the world! 🌟',
+                hashtags: '#happy #positivity #joy #goodvibes #smile #happiness #mood #inspire',
+                likes: 12500,
+                comments: 1200,
+                shares: 892,
+                isLiked: false,
+                isSaved: false,
+                timestamp: Date.now() - 3600000
+            },
+            {
+                id: 2,
+                user: 'joyfuldan',
+                title: '🎥 Joyful Dance',
+                description: 'Dancing my way to happiness! Join me in this fun routine that always lifts my spirits! 💃',
+                hashtags: '#dance #joy #fun #music #energy #movement #celebration #life',
+                likes: 8300,
+                comments: 650,
+                shares: 420,
+                isLiked: false,
+                isSaved: false,
+                timestamp: Date.now() - 7200000
+            },
+            {
+                id: 3,
+                user: 'smilemaker',
+                title: '🎥 Smile Challenge',
+                description: 'Can you watch this without smiling? The power of positivity is real! Tag a friend who needs to see this! 😊',
+                hashtags: '#smile #challenge #positivity #happiness #friendship #love #good #vibes',
+                likes: 15600,
+                comments: 980,
+                shares: 1200,
+                isLiked: false,
+                isSaved: false,
+                timestamp: Date.now() - 10800000
+            }
+        ];
+        
+        const comments = new Map();
+        
+        // Initialize comments for videos
+        comments.set(1, [
+            { id: 1, user: 'user1', text: 'This made my day! 😊', timestamp: Date.now() - 1800000 },
+            { id: 2, user: 'user2', text: 'Love the positive energy!', timestamp: Date.now() - 3600000 },
+            { id: 3, user: 'user3', text: 'Exactly what I needed to see today ❤️', timestamp: Date.now() - 5400000 }
+        ]);
+        
+        comments.set(2, [
+            { id: 4, user: 'user4', text: 'Your moves are amazing! 💃', timestamp: Date.now() - 2400000 },
+            { id: 5, user: 'user5', text: 'Teaching me your dance please!', timestamp: Date.now() - 4800000 }
+        ]);
+        
+        comments.set(3, [
+            { id: 6, user: 'user6', text: 'I actually smiled! 😂', timestamp: Date.now() - 1200000 },
+            { id: 7, user: 'user7', text: 'Challenge failed successfully!', timestamp: Date.now() - 3000000 }
+        ]);
+
+        // Authentication Functions
+        function login() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !email || !password) {
+                showNotification('Please fill in all fields');
+                return;
+            }
+            
+            // Create or login user
+            if (!users.has(username)) {
+                users.set(username, {
+                    username: username,
+                    email: email,
+                    password: password,
+                    followers: 0,
+                    following: 0,
+                    likes: 0,
+                    bio:
